@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\User;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
@@ -27,5 +28,26 @@ class AuthController extends Controller
         return response()->json([
             'user' => $user
         ], 201);
+    }
+
+    public function login(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => 'required|string|email',
+            'password' => 'required|string'
+        ]);
+
+        if (!\Auth::attempt($validated)) {
+            return response()->json([
+                'message' => 'Incorrect Email or Password'
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+
+        $user = $request->user();
+
+        return response()->json([
+            'token' => $user->createToken('Personal Access Token')->accessToken,
+            'user' => $user
+        ], Response::HTTP_OK);
     }
 }

@@ -4,6 +4,8 @@ namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
 use App\User;
 
@@ -33,5 +35,28 @@ class AuthControllerTest extends TestCase
             'last_name' => $data['last_name'],
             'email' => $data['email'],
         ]);
+    }
+
+    /** @test */
+    public function a_user_can_log_in()
+    {
+        $this->artisan('passport:install');
+
+        $password = 'password';
+
+        $user = factory(User::class)->create([
+            'password' => Hash::make($password)
+        ]);
+
+        $response = $this->post('/api/login', [
+            'email' => $user->email,
+            'password' => $password
+        ]);
+
+        $response->assertStatus(Response::HTTP_OK)
+            ->assertJsonStructure([
+                'token',
+                'user'
+            ]);
     }
 }
